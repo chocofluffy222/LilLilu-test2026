@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ピエロのリルリルと仲間たち診断</title>
+    
+    <!-- OGP設定（LINEシェア用） -->
+    <meta property="og:title" content="ピエロのリルリルと仲間たち診断" />
+    <meta property="og:description" content="あなたの隠れた魅力はなんだ！？あなたにぴったりの7つの質問で診断するよ♡" />
+    <meta property="og:type" content="website" />
+    <!-- ★重要：公開後にここの content を「https://.../cover.png」という完全なURLに書き換えると、LINEで画像が表示されます -->
+    <meta property="og:image" content="https://chocofluffy222.github.io/LilLilu-hiddencharm/cover.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    
+    <!-- React & ReactDOM (CDN) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel (JSX変換用 CDN) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS (デザイン用 CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            background-color: #fff9f0;
+            color: #5d4037; /* 文字色：こげ茶 */
+        }
+
+        /* 背景：手書き風の大きめの水玉ポップ（パステルピンク一色） */
+        .bg-polka-pop {
+            background-color: #fffaf0; /* ベース：クリーム色 */
+            background-image: 
+                radial-gradient(circle, #ffe0e9 25%, transparent 26%),
+                radial-gradient(circle, #ffe0e9 25%, transparent 26%);
+            background-position: 0 0, 50px 50px;
+            background-size: 100px 100px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 24px;
+            border: 3px solid #fff;
+            box-shadow: 0 8px 32px rgba(255, 182, 193, 0.25);
+        }
+
+        /* アニメーション */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+
+        @keyframes wand-swing {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(-15deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(15deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .wand-swing {
+            transform-origin: 50% 80%;
+            animation: wand-swing 2.5s ease-in-out infinite;
+        }
+
+        @keyframes star-twinkle {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+            100% { transform: scale(0) rotate(360deg); opacity: 0; }
+        }
+        .star-twinkle {
+            transform-origin: center;
+            animation: star-twinkle 2s ease-out infinite;
+        }
+
+        .btn-bounce:active { transform: scale(0.96); transition: transform 0.1s; }
+        .text-pastel-pink { color: #ff8fa3; }
+        .text-deep-brown { color: #5d4037; }
+        
+        /* テキストの改行設定 */
+        .whitespace-pre-wrap { white-space: pre-wrap; }
+    </style>
+</head>
+<body class="bg-polka-pop">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- データ定義 ---
+        const CHARACTERS = {
+            lillilu: {
+                id: 'lillilu', nameEn: 'LilLilu', nameJp: 'リルリル', 
+                color: '#FFB3B3', darkColor: '#FF6B6B', // 赤系
+                title: '🤡 雨上がりの太陽タイプ', 
+                hiddenCharm: '無邪気な愛され力',
+                desc: 'あなたはそこにいるだけで、\n周りを明るくする太陽のような存在！\nちょっとしたユーモアで、みんなの\n心をフワッと軽くしているよ。',
+                advice: 'まわりの人がホッコリとするような\n雰囲気をもっているあなた。\n優しい心で自分の気持ちよりも、\nつい相手の気持ちを優先しがち。\nすこし疲れた日は、誰かのためだけじゃなくて、自分のためにも\n『優しくしてあげる時間』\nをつくってあげてね。',
+                traits: '愛嬌／親しみやすい／朗らか', 
+                img: 'lillilu.png'
+            },
+            rosie: {
+                id: 'rosie', nameEn: 'Rosie', nameJp: 'ロージー', 
+                color: '#FFCCE0', darkColor: '#FF85A2', // ピンク系
+                title: '🐰 春のそよ風タイプ', 
+                hiddenCharm: '天真爛漫なハッピーオーラ',
+                desc: '喜びをシェアする天才！\n素敵なものを見つけたら一番に誰かに伝えるその純粋さが、みんなの日常をカラフルにしているよ。',
+                advice: '季節の変化や、身近な“ときめき”を見つけるのが上手なあなた。\n相手の好きなものを見つけて、シェアしてあげるのも上手。\n相手におすそわけするだけじゃなくって、\n時には自分のうれしかったこと、\nちょっぴりさみしかったこと、\n信頼できる人にシェアしてみてね。',
+                traits: '感性豊か／天真爛漫／天然', 
+                img: 'rosie.png'
+            },
+            finn: {
+                id: 'finn', nameEn: 'Finn', nameJp: 'フィン', 
+                color: '#B3E6B3', darkColor: '#6BCB77', // 緑系
+                title: '🐸 夏の波しぶきタイプ', 
+                hiddenCharm: 'はじけるフレンドリーさ',
+                desc: 'あなたは心の壁を取り払う天才！\n『ようこそ！』というあなたの明るい一言が、みんなの心のドアを開けているよ。',
+                advice: '本当はちょっぴりドキドキしちゃうときもあるけど、いざというときは笑顔で場をつなげるフィン気質のあなた。\nうまく話そうとしなくても、無理しなくても大丈夫。\n「聞いてみたい」と思ったことを\n素直にきいてみるだけで、十分にステキな\nコミュニケーションになっているよ。',
+                traits: 'ムードメーカー／好奇心／冒険家', 
+                img: 'finn.png'
+            },
+            bonbon: {
+                id: 'bonbon', nameEn: 'Bonbon', nameJp: 'ボンボン', 
+                color: '#FFD9B3', darkColor: '#FF9F43', // オレンジ系
+                title: '🐻 秋の夕焼けタイプ', 
+                hiddenCharm: 'ひたむきさと前向きさ', hiddenCharmAlt: 'ひたむきさと前向きさ',
+                desc: 'あなたは言葉より行動で示す人。\nコツコツ頑張るその背中に、みんなは\n『自分も頑張ろう！』と勇気を\nもらっているよ。',
+                advice: '自分のペースで、目の前のことに一生懸命になれるタイプのあなた。\n結果よりもプロセスを大事にできるのはとっても良いところ。\nだけど、時に頑張りすぎて、『寝てない！』ってことあるんじゃない？\nときどき立ち止まって、\n『ここまで来た自分、よくやってる！』って、自分にご褒美をあげてね。',
+                traits: '努力家／誠実／マイペース', 
+                img: 'bonbon.png'
+            },
+            espie: {
+                id: 'espie', nameEn: 'Espie', nameJp: 'エスピー', 
+                color: '#B3D9FF', darkColor: '#4D96FF', // 青系
+                title: '🐘 冬の毛布タイプ', 
+                hiddenCharm: '深くて温かい包容力',
+                desc: '言葉にならない声を聞く優しさの\n持ち主。\nアドバイスより、ただ静かに寄り添ってくれるその温もりに、多くの人が\n救われているよ。',
+                advice: 'あなたは、困っている人や不安そうな人を\n見つけると、そっと寄り添いたくなる\nエスピー気質。\n支える側に回ることが多いからこそ、\n自分の不安や疲れを後回しにしてしまう\n一面も。\n休みの日は、毛布をかぶって、\nゆっくり休んでね。',
+                traits: '包容力／共感力／あったかい', img: 'espie.png'
+            },
+            gigi: {
+                id: 'gigi', nameEn: 'Gigi', nameJp: 'ジジ', 
+                color: '#FFF9B3', darkColor: '#E1B12C', // 黄色系 (視認性のため濃く)
+                title: '🦒 夜明けの朝日タイプ', 
+                hiddenCharm: 'おだやかな見守り力',
+                desc: '一歩引いて全体を見る\n安心感の持ち主。\nみんなが気づかない小さな変化にも気づく『賢さと優しさ』に支えられている人がいるよ。',
+                advice: 'あなたは、感情に流され過ぎず、少し\n高いところから全体を見守るような\n視点を持っている人。\nだからこそ、『自分の気持ち』を後回しに\nしがちな一面も。時々は、自分の本音を\n吐き出す時間を作ってみてね。\nジジみたいに、ストレス発散に、\nジェットコースターに乗るのもひとつの手だよ。',
+                traits: '俯瞰／冷静さ／見守り', 
+                img: 'gigi.png'
+            },
+            levy: {
+                id: 'levy', nameEn: 'Levy', nameJp: 'レヴィ', 
+                color: '#E0B3FF', darkColor: '#9D65C9', // 紫系
+                title: '🦄 夜空の星タイプ', 
+                hiddenCharm: '静かなる癒やしの光',
+                desc: '暗闇でこそ輝く希望の星。\n落ち込んでいる時にあなたがかけてくれる優しい言葉は、迷っている人の道しるべになっているよ。',
+                advice: 'にぎやかな場よりも、少人数や落ち着いた\n時間のなかで、自分らしさが光るタイプ。\nじっくり考えたり、ひとりの世界にひたる時間も大切な栄養。\n『今日はどんないいことあったかな？』\nと、寝る前にひとつだけ思い出してみると、明日につながる心穏やかな時間を取り戻せるよ',
+                traits: 'ミステリアス／静かな情熱／直感', 
+                img: 'levy.png'
+            }
+        };
+
+        // 質問データ
+        const ALL_QUESTIONS = [
+            { id: 1, text: "大切な人が\n落ち込んでいたら？", options: [{ text: "そっと寄り添って、\nゆっくり話を聞く", point: "espie" }, { text: "気分転換に誘って、\n一緒に楽しむ", point: "rosie" }, { text: "いいところを伝えて、励ます", point: "bonbon" }] },
+            { id: 2, text: "大切な人が\n一等賞になったよ！", options: [{ text: "自分のことみたいに\n喜んじゃう！", point: "rosie" }, { text: "「よくがんばったね」\nって声をかける", point: "espie" }, { text: "「君の頑張りを知っているよ」\nって伝える", point: "gigi" }] },
+            { id: 3, text: "気持ちがちょっと\nすれ違っちゃった…", options: [{ text: "まずは「どうしたの？」\nって聞いてみる", point: "finn" }, { text: "自分の気持ちを、\nそっと打ち明ける", point: "lillilu" }, { text: "少し時間をおいて、\n相手のタイミングを待つ", point: "gigi" }] },
+            { id: 4, text: "自分がしんどいときは？", options: [{ text: "誰かと笑って、\n気持ちを軽くする", point: "rosie" }, { text: "静かにひとりで、心を整える", point: "levy" }, { text: "次はどうしたらいいか考える", point: "bonbon" }] },
+            { id: 5, text: "自分のがんばり方。\nいちばん近いのは？", options: [{ text: "目立たなくてもいい。\nコツコツ積み重ねる", point: "bonbon" }, { text: "ここぞの時に集中して、\nぐっと力を出す", point: "levy" }, { text: "「ありがとう」があると、\nもっとがんばれちゃう", point: "lillilu" }] },
+            { id: 6, text: "おやすみ日の朝。どうスタートするのが理想的？", options: [{ text: "コーヒーや紅茶で、\nホッと一息", point: "levy" }, { text: "毛布にくるまって、ぬくぬく", point: "espie" }, { text: "おでかけの準備！Let’s go！", point: "lillilu" }] },
+            { id: 7, text: "旅にでるなら？", options: [{ text: "まずはルートを考えて、\nしっかり計画づくり", point: "levy" }, { text: "思い立ったら、\nすぐ飛び出す！", point: "finn" }, { text: "準備して、体調も整える", point: "espie" }] },
+            { id: 8, text: "みんなでいるときは\nどうしてる？", options: [{ text: "みんなが話しやすい\n雰囲気づくり", point: "finn" }, { text: "ゆっくり\nひとりひとりの話を聞く", point: "espie" }, { text: "全体を見ながら、\nそっとフォローにまわる", point: "gigi" }] },
+            { id: 9, text: "街で迷子を見つけたら？", options: [{ text: "「大丈夫だよ」\nってそばで一緒に待つ", point: "lillilu" }, { text: "手をひいて、一緒に探す！", point: "finn" }, { text: "少し離れた場所から、\nそっと見守る", point: "gigi" }] },
+            { id: 10, text: "サプライズでプレゼント！\n何をあげたい？", options: [{ text: "自分がこれだ！と思ったもの", point: "finn" }, { text: "気持ちをこめた手作りのもの", point: "bonbon" }, { text: "相手がずっと\n欲しがってたもの", point: "rosie" }] },
+            { id: 11, text: "遊園地にきたよ。\n何が好き？", options: [{ text: "ジェットコースター！ \nスリルを楽しみたい", point: "gigi" }, { text: "メリーゴーランド♪\n ゆっくり笑顔でぐるぐる", point: "rosie" }, { text: "観覧車⭐︎きらめく景色を\nながめる時間が好き", point: "levy" }] },
+            { id: 12, text: "今日は1日楽しかった！\n帰り道はどんな気分？", options: [{ text: "もう次のワクワクを考える", point: "bonbon" }, { text: "写真を見て、思い出にひたる", point: "gigi" }, { text: "終わっちゃった～\nちょっぴり切ない", point: "lillilu" }] }
+        ];
+
+        // --- コンポーネント定義 ---
+
+        // 画像表示用コンポーネント (エラー時プレースホルダー)
+        const SmartImage = ({ src, alt, fallbackText, className }) => {
+            const [hasError, setHasError] = useState(false);
+
+            // 修正: srcが指定されていてエラーがない場合は画像を表示
+            // 画像が読み込めなかったら hasError が true になりダミー表示
+            if (hasError || !src) {
+                return (
+                    <div className={`${className} flex flex-col items-center justify-center text-center p-4`} style={{ backgroundColor: '#fff5f5', border: '2px dashed #ffb3ba', color: '#ffb3ba' }}>
+                        <span className="text-3xl mb-2">📷</span>
+                        <span className="font-bold text-sm">{fallbackText}</span>
+                    </div>
+                );
+            }
+
+            return (
+                <img 
+                    src={src} 
+                    alt={alt} 
+                    className={className} 
+                    onError={() => setHasError(true)} 
+                />
+            );
+        };
+
+        const PictureBookWand = () => (
+            <svg viewBox="0 0 200 200" className="w-64 h-64 wand-swing" style={{ overflow: 'visible' }}>
+                <defs>
+                    <filter id="handdrawn" x="-20%" y="-20%" width="140%" height="140%">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+                        <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" />
+                    </filter>
+                </defs>
+                <g filter="url(#handdrawn)">
+                    <path d="M95,90 L90,190 Q95,200 105,190 L105,90 Z" fill="#D4A373" stroke="#8B4513" strokeWidth="2" />
+                    <path d="M100,20 L120,70 L170,70 L130,100 L145,150 L100,120 L55,150 L70,100 L30,70 L80,70 Z" fill="#FFD700" stroke="#FFA500" strokeWidth="3" strokeLinejoin="round" />
+                    <circle cx="100" cy="90" r="15" fill="#FFFACD" opacity="0.6" />
+                    <g className="star-twinkle" style={{ transformOrigin: '50px 50px', animationDelay: '0s' }}>
+                        <path d="M50,40 L55,50 L65,50 L57,58 L60,68 L50,60 L40,68 L43,58 L35,50 L45,50 Z" fill="#87CEEB" />
+                    </g>
+                    <g className="star-twinkle" style={{ transformOrigin: '150px 120px', animationDelay: '0.5s' }}>
+                        <circle cx="150" cy="120" r="8" fill="#FFB6C1" />
+                    </g>
+                    <g className="star-twinkle" style={{ transformOrigin: '160px 40px', animationDelay: '1s' }}>
+                        <path d="M160,30 L165,40 L175,40 L167,48 L170,58 L160,50 L150,58 L153,48 L145,40 L155,40 Z" fill="#98FB98" />
+                    </g>
+                </g>
+            </svg>
+        );
+
+        // シンプルなSVGパイチャート
+        const SimplePieChart = ({ data, activeId, onTouch }) => {
+            const total = data.reduce((sum, item) => sum + item.value, 0);
+            let cumulativeValue = 0;
+
+            const getCoordinatesForPercent = (percent) => {
+                const x = Math.cos(2 * Math.PI * percent);
+                const y = Math.sin(2 * Math.PI * percent);
+                return [x, y];
+            };
+
+            return (
+                <div className="relative w-64 h-64 mx-auto">
+                    <svg viewBox="-1 -1 2 2" style={{ transform: 'rotate(-90deg)' }} className="w-full h-full overflow-visible">
+                        {data.map((slice, index) => {
+                            const startPercent = cumulativeValue / total;
+                            const value = slice.value;
+                            cumulativeValue += value;
+                            const endPercent = cumulativeValue / total;
+
+                            if (value === total) {
+                                return <circle key={slice.id} cx="0" cy="0" r="1" fill={slice.color} onClick={() => onTouch(slice)} />;
+                            }
+
+                            const [startX, startY] = getCoordinatesForPercent(startPercent);
+                            const [endX, endY] = getCoordinatesForPercent(endPercent);
+                            const largeArcFlag = endPercent - startPercent > 0.5 ? 1 : 0;
+                            const pathData = `M 0 0 L ${startX} ${startY} A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY} Z`;
+                            const isActive = slice.id === activeId;
+
+                            return (
+                                <path
+                                    key={slice.id}
+                                    d={pathData}
+                                    fill={slice.color}
+                                    stroke={isActive ? slice.color : 'white'}
+                                    strokeWidth={isActive ? '0.1' : '0.02'}
+                                    style={{ 
+                                        filter: isActive ? 'drop-shadow(0px 0px 4px rgba(0,0,0,0.2))' : '',
+                                        transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                                        transition: 'transform 0.3s ease',
+                                        cursor: 'pointer'
+                                    }}
+                                    onClick={() => onTouch(slice)}
+                                />
+                            );
+                        })}
+                        <circle cx="0" cy="0" r="0.6" fill="white" fillOpacity="0.6" />
+                    </svg>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [gameState, setGameState] = useState('start');
+            const [questions, setQuestions] = useState([]);
+            const [currentQIndex, setCurrentQIndex] = useState(0);
+            const [scores, setScores] = useState({});
+            const [resultChar, setResultChar] = useState(null);
+            const [pieData, setPieData] = useState([]);
+            const [touchedPieName, setTouchedPieName] = useState('');
+
+            const shuffleArray = (array) => {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            };
+
+            const getImageUrl = (filename, name, color) => {
+                // 画像ファイル (lillilu.png など) をindex.htmlと同じフォルダに置く想定
+                return filename; 
+            };
+
+            const initGame = () => {
+                const shuffled = shuffleArray(ALL_QUESTIONS);
+                setQuestions(shuffled.slice(0, 7));
+                setScores({ lillilu: 0, rosie: 0, finn: 0, bonbon: 0, espie: 0, gigi: 0, levy: 0 });
+                setCurrentQIndex(0);
+                setGameState('quiz');
+                setResultChar(null);
+                setTouchedPieName('');
+            };
+
+            const handleAnswer = (pointChar) => {
+                const newScores = { ...scores, [pointChar]: scores[pointChar] + 1 };
+                setScores(newScores);
+                if (currentQIndex < questions.length - 1) {
+                    setTimeout(() => setCurrentQIndex(currentQIndex + 1), 250);
+                } else {
+                    calculateResult(newScores);
+                }
+            };
+
+            const calculateResult = (finalScores) => {
+                setGameState('analyzing');
+                setTimeout(() => {
+                    let maxScore = -1;
+                    let winnerKey = 'lillilu';
+                    const keys = shuffleArray(Object.keys(finalScores));
+                    keys.forEach(key => {
+                        if (finalScores[key] > maxScore) {
+                            maxScore = finalScores[key];
+                            winnerKey = key;
+                        }
+                    });
+                    setResultChar(CHARACTERS[winnerKey]);
+                    
+                    const data = Object.keys(CHARACTERS).map(key => ({
+                        id: key,
+                        name: CHARACTERS[key].nameJp,
+                        value: finalScores[key] || 0.1, 
+                        color: CHARACTERS[key].color
+                    }));
+                    setPieData(data);
+                    setGameState('result');
+                }, 3000);
+            };
+
+            const shareResult = (platform) => {
+                const text = `私のタイプは【${resultChar.nameJp}】でした！\n隠れた魅力：${resultChar.hiddenCharm}\n\n#リルリルと仲間たち診断`;
+                const url = window.location.href; 
+                let shareUrl = "";
+                if (platform === 'line') {
+                    shareUrl = `https://line.me/R/msg/text/?${encodeURIComponent(text + "\n" + url)}`;
+                } else if (platform === 'threads') {
+                    shareUrl = `https://www.threads.net/intent/post?text=${encodeURIComponent(text + "\n" + url)}`;
+                } else if (platform === 'instagram') {
+                    alert("スクリーンショットを撮ってストーリーにシェアしてね！");
+                    return;
+                }
+                window.open(shareUrl, '_blank');
+            };
+
+            const openInstagram = () => {
+                window.open("https://www.instagram.com/lillilu_cuddlyclown?igsh=MWsxYjkyYzRkbm00dQ%3D%3D&utm_source=qr/", "_blank");
+            };
+           
+            if (gameState === 'start') {
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-[90vh] px-6 text-center animate-fade-in">
+                        <div className="animate-float mb-8">
+                            <div className="text-8xl filter drop-shadow-xl">🎈</div>
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-pastel-pink mb-4 leading-relaxed tracking-wider" style={{ textShadow: '3px 3px 0 #fff' }}>
+                            ピエロのリルリルと<br/>仲間たち診断
+                        </h1>
+                        <div className="bg-white/80 py-2 px-6 rounded-full shadow-sm mb-4 inline-block">
+                            <p className="text-deep-brown font-bold text-lg">あなたの隠れた魅力はなんだ！？</p>
+                            <p className="text-deep-brown font-bold text-sm mt-1">あなたにぴったりの7つの質問で診断するよ♡</p>
+                        </div>
+                        
+                        {/* 表紙画像エリア (正方形) */}
+                        <div className="w-64 h-64 bg-white/50 rounded-3xl border-4 border-white shadow-lg mb-8 overflow-hidden flex items-center justify-center relative">
+                            {/* ファイル名 cover.png を指定 */}
+                            <SmartImage 
+                                src="cover.png" 
+                                alt="表紙" 
+                                fallbackText="表紙画像 (cover.png)"
+                                className="w-full h-full object-cover" 
+                            />
+                        </div>
+
+                        <button onClick={initGame} className="w-full max-w-xs bg-gradient-to-r from-pink-400 to-rose-400 text-white text-2xl font-bold py-5 rounded-full shadow-xl border-4 border-white btn-bounce relative overflow-hidden group">
+                            <span className="relative z-10">診断スタート！</span>
+                        </button>
+
+                        <div className="text-center py-4 text-xs text-[#5d4037] opacity-50 font-bold">
+                            &copy; 2025 chocofluffy
+                        </div>
+
+                        
+                    </div>
+                );
+            }
+
+            if (gameState === 'quiz') {
+                const q = questions[currentQIndex];
+                return (
+                    <div className="flex flex-col min-h-[90vh] px-6 py-8">
+                        <div className="w-full max-w-md mx-auto mb-6">
+                            <div className="flex justify-between text-lg font-bold text-gray-400 mb-2">
+                                <span>Q{currentQIndex + 1}</span>
+                                <span>{currentQIndex + 1}/7</span>
+                            </div>
+                            <div className="h-4 bg-white rounded-full overflow-hidden border border-pink-100">
+                                <div className="h-full bg-pink-400 transition-all duration-500 rounded-full" style={{ width: `${((currentQIndex + 1) / 7) * 100}%` }}></div>
+                            </div>
+                        </div>
+                        <div className="flex-grow flex flex-col justify-center max-w-md mx-auto w-full">
+                            {/* 画像挿入スペース (正方形) */}
+                            <div className="w-full aspect-square bg-white/50 rounded-3xl mb-6 border-4 border-dashed border-pink-200 flex items-center justify-center relative overflow-hidden shadow-inner">
+                                <SmartImage 
+                                    src={`q${q.id}.png`} 
+                                    alt={`q${q.id}.png`} 
+                                    fallbackText="Image Area"
+                                    className="w-full h-full object-cover" 
+                                />
+                            </div>
+                            
+                            {/* 修正：質問枠を薄いパープルに変更して区別 */}
+                            <div className="bg-purple-50 border-4 border-purple-100 rounded-3xl p-6 mb-6 relative shadow-sm">
+                                <h2 className="text-2xl md:text-3xl font-bold text-center text-deep-brown leading-relaxed whitespace-pre-wrap">
+                                    {q.text}
+                                </h2>
+                            </div>
+                            <div className="space-y-4">
+                                {q.options.map((opt, i) => (
+                                    <button key={i} onClick={() => handleAnswer(opt.point)} className="w-full bg-white text-deep-brown text-xl font-bold py-5 px-6 rounded-2xl shadow-md border-2 border-transparent hover:border-pink-300 active:bg-pink-50 transition-all btn-bounce whitespace-pre-wrap leading-relaxed">
+                                        {opt.text}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'analyzing') {
+                return (
+                    <div className="flex flex-col items-center justify-center min-h-screen relative overflow-hidden">
+                        <div className="relative z-10 text-center flex flex-col items-center">
+                            <PictureBookWand />
+                            <h2 className="text-3xl font-bold text-deep-brown mt-8 animate-pulse">分析中...</h2>
+                        </div>
+                    </div>
+                );
+            }
+
+            if (gameState === 'result' && resultChar) {
+                return (
+                    <div className="pb-20 pt-8 px-4 max-w-md mx-auto animate-fade-in">
+                        <div className="text-center mb-8">
+                            <p className="text-xl font-bold text-gray-500 mb-2">あなたのタイプは…</p>
+                        </div>
+                        <div className="flex justify-center mb-6">
+                            <div className="p-3 bg-white rounded-[2.5rem] shadow-xl">
+                                <div className="w-64 h-64 md:w-72 md:h-72 rounded-[2rem] overflow-hidden bg-gray-100 border-2 border-gray-100">
+                                    <SmartImage 
+                                        src={getImageUrl(resultChar.img, resultChar.nameEn, resultChar.color)} 
+                                        alt={resultChar.nameEn} 
+                                        fallbackText={resultChar.nameEn}
+                                        className="w-full h-full object-cover" 
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="text-center mb-10">
+                            <div className="mb-4">
+                                <h1 className="text-4xl md:text-5xl font-extrabold text-deep-brown mb-1">{resultChar.nameEn}</h1>
+                                <h2 className="text-3xl font-bold text-deep-brown">（{resultChar.nameJp}）</h2>
+                            </div>
+                            <div className="inline-block bg-white/60 px-6 py-3 rounded-2xl shadow-sm border border-pink-100">
+                                <p 
+                                    className="text-2xl md:text-3xl font-extrabold" 
+                                    style={{ color: resultChar.darkColor }}
+                                >
+                                    {resultChar.title.split(' ')[0]}<br/>{resultChar.title.split(' ').slice(1)}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        {/* 隠れた魅力 & 説明 */}
+                        <div className="glass-card p-6 mb-8 text-center border-pink-100">
+                            <h3 className="text-lg font-bold text-deep-brown mb-2 bg-pink-100 inline-block px-3 py-1 rounded-full">【隠れた魅力】</h3>
+                            <p className="text-xl font-bold text-pink-500 mb-4">{resultChar.hiddenCharm}</p>
+                            <p className="text-lg leading-8 font-bold text-deep-brown whitespace-pre-wrap">{resultChar.desc}</p>
+                        </div>
+
+                        {/* アドバイス (余白調整済み) */}
+                        <div className="bg-white rounded-3xl p-6 shadow-lg border-2 border-dashed border-gray-300 mb-8 relative text-center mt-8">
+                            <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-yellow-100 px-6 py-2 rounded-full border border-yellow-200 shadow-sm">
+                                <span className="font-bold text-yellow-600 text-lg">【アドバイス】</span>
+                            </div>
+                            <p className="text-md leading-7 font-bold text-gray-600 mt-6 whitespace-pre-wrap">{resultChar.advice}</p>
+                        </div>
+
+                        {/* ステキなところ (一行) */}
+                        <div className="text-center mb-10">
+                            <h3 className="text-lg font-bold text-gray-400 mb-4">【ステキなところ】</h3>
+                            <div className="bg-white px-5 py-4 rounded-2xl text-pink-500 font-bold shadow-md border border-pink-50 text-lg inline-block w-full">
+                                ・{resultChar.traits.replace(/／/g, '・')}
+                            </div>
+                        </div>
+
+                        {/* 円グラフ */}
+                        <div className="glass-card p-6 mb-12">
+                            <SimplePieChart 
+                                data={pieData} 
+                                activeId={resultChar.id} 
+                                onTouch={(d) => setTouchedPieName(`${d.name}: ${Math.round((d.value/7)*100)}%`)} 
+                            />
+                            <div className="text-center mt-2 pointer-events-none">
+                                <span className="text-sm font-bold bg-white/80 px-2 py-1 rounded text-deep-brown mb-1">
+                                    {touchedPieName || resultChar.nameJp}
+                                </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 mt-4 text-xs">
+                                {Object.values(CHARACTERS).map(c => (
+                                    <div key={c.id} className="flex items-center gap-2 bg-white/50 p-1 rounded-lg">
+                                        <div className="w-3 h-3 rounded-full" style={{background: c.color}}></div>
+                                        <span className={c.id === resultChar.id ? "font-bold text-deep-brown" : "text-gray-500"}>
+                                            {c.nameJp}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        {/* 全タイプ図鑑 (2行表示・フォントサイズ調整・テーマカラー) */}
+                        <div className="mb-10 text-[0.8em]">
+                            <div className="space-y-4">
+                                {Object.values(CHARACTERS).map((char) => {
+                                    // 視認性の良い濃い色を定義
+                                    const darkColor = char.darkColor;
+                                    
+                                    return (
+                                        <div 
+                                            key={char.id} 
+                                            className="rounded-2xl p-4 shadow-sm flex flex-col gap-1 bg-white/90 relative overflow-hidden transition-transform"
+                                            style={{ 
+                                                border: char.id === resultChar.id ? `4px solid ${char.color}` : '1px solid #eee',
+                                                transform: char.id === resultChar.id ? 'scale(1.02)' : 'scale(1)',
+                                                boxShadow: char.id === resultChar.id ? '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' : ''
+                                            }}
+                                        >
+                                            {char.id === resultChar.id && (
+                                                <div className="absolute top-0 left-0 bg-yellow-400 text-white text-xs font-bold px-3 py-1 rounded-br-lg z-10">
+                                                    YOUR TYPE
+                                                </div>
+                                            )}
+                                            <div className="absolute top-0 right-0 w-20 h-20 opacity-20 rounded-bl-full" style={{backgroundColor: char.color}}></div>
+                                            
+                                            <div className="flex items-center gap-2 mb-1 relative z-0">
+                                                <span className="text-3xl">{char.title.split(' ')[0]}</span>
+                                                <div className="font-bold text-lg text-deep-brown flex-1">
+                                                    {char.nameEn} <span className="text-sm font-normal">({char.nameJp})</span>
+                                                </div>
+                                            </div>
+                                            <div className="pl-1 mt-1 relative z-0">
+                                                <div className="font-bold text-gray-700 text-sm">
+                                                    {char.title.split(' ').slice(1)}
+                                                </div>
+                                                <div className="font-bold text-xs mt-1" style={{ color: darkColor }}>
+                                                    【隠れた魅力：{char.hiddenCharmAlt || char.hiddenCharm}】
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                        <div className="mb-10">
+                            <button 
+                                onClick={openInstagram}
+                                className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 text-white text-xl font-bold py-4 rounded-2xl shadow-lg border-4 border-white btn-bounce flex items-center justify-center gap-3"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                                </svg>
+                                Instagramを見る
+                            </button>
+                        </div>
+                        {/* ▲▲▲ ここまでコピー ▲▲▲ */}
+                            <button onClick={initGame} className="w-full bg-white text-gray-500 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 border-2 border-gray-200 shadow-md hover:bg-gray-50 transition btn-bounce">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                                もう一度診断する
+                            </button>
+                            {/* ▼▼▼ ここから追加 ▼▼▼ */}
+                            <p className="text-center text-pink-500 font-bold my-3">
+                                ＼結果をシェアしてみてね♡／
+                            </p>
+                            {/* ▲▲▲ ここまで追加 ▲▲▲ */}
+                            <div className="grid grid-cols-3 gap-2">
+                                <button onClick={() => shareResult('line')} className="bg-[#06C755] text-white py-3 rounded-xl font-bold flex items-center justify-center shadow-lg btn-bounce text-sm">LINE</button>
+                                <button onClick={() => shareResult('threads')} className="bg-black text-white py-3 rounded-xl font-bold flex items-center justify-center shadow-lg btn-bounce text-sm">Threads</button>
+                                <button onClick={() => shareResult('instagram')} className="bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 text-white py-3 rounded-xl font-bold flex items-center justify-center shadow-lg btn-bounce text-sm">Instagram</button>
+                            </div>
+                        </div>
+
+                        <div className="text-center py-4 text-xs text-[#5d4037] opacity-50 font-bold">
+   　　　　　　　　　　　　　　　　　 &copy; 2025 chocofluffy
+　　　　　　　　　　　　　　　　</div>
+                        
+                    </div>
+                );
+            }
+            return null;
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
