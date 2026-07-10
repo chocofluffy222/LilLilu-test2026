@@ -385,6 +385,14 @@ const AnalyzingAnimation = () => {
             };
 
             const shareResult = (platform) => {
+                const ranking = Object.entries(scores)
+        .sort((a, b) => b[1] - a[1])
+        .map(([key, value]) => {
+            const percent = Math.round((value / 7) * 100);
+            return `${CHARACTERS[key].nameJp} ${percent}%`;
+        })
+        .join("\n");
+                
                 const text = `私のタイプは【${resultChar.nameJp}】でした！\n隠れた魅力：${resultChar.hiddenCharm}\n\n#リルリルと仲間たち診断`;
                 const url = window.location.href; 
                 let shareUrl = "";
