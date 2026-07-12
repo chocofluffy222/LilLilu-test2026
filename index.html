@@ -342,6 +342,15 @@ const AnalyzingAnimation = () => {
             };
 
             const getImageUrl = (filename, name, color) => {
+                const PRIORITY_ORDER = [
+    "lillilu",
+    "rosie",
+    "finn",
+    "bonbon",
+    "espie",
+    "gigi",
+    "levy"
+];
                 // 画像ファイル (lillilu.png など) をindex.htmlと同じフォルダに置く想定
                 return filename; 
             };
@@ -418,29 +427,48 @@ const calculatePercentages = (scoreData) => {
             };
 
             const calculateResult = (finalScores) => {
-                setGameState('analyzing');
-                setTimeout(() => {
-                   let winnerKey = PRIORITY_ORDER[0];
+    setGameState("analyzing");
 
-PRIORITY_ORDER.forEach(key => {
-   　　　　　　　　　　 "lillilu",
-   　　　　　　　　　　 "rosie",
-    　　　　　　　　　　"finn",
-   　　　　　　　　　　 "bonbon",
-    　　　　　　　　　　"espie",
-    　　　　　　　　　　"gigi",
-    　　　　　　　　　　"levy"
-　　　　　　　　　];
+    setTimeout(() => {
+        let maxScore = -1;
+        let winnerKey = PRIORITY_ORDER[0];
 
-　　　　　　　　　let maxScore = -1;
-　　　　　　　　　let winnerKey = priorityOrder[0];
+        PRIORITY_ORDER.forEach((key) => {
+            if (finalScores[key] > maxScore) {
+                maxScore = finalScores[key];
+                winnerKey = key;
+            }
+        });
 
-　　　　　　　　　　priorityOrder.forEach(key => {
-    　　　　　　if (finalScores[key] > maxScore) {
-        　　　　maxScore = finalScores[key];
-        　　　　winnerKey = key;
-   　　　　　　 }
-　　　　　　　　});
+        setResultChar(CHARACTERS[winnerKey]);
+
+        const percentages = calculatePercentages(finalScores);
+
+        const data = Object.keys(CHARACTERS).map((key) => {
+            const percentageItem = percentages.find(
+                (item) => item.key === key
+            );
+
+            return {
+                id: key,
+                name: CHARACTERS[key].nameJp,
+
+                // 0点でも円グラフには少し表示
+                value: finalScores[key] || 0.1,
+
+                // 表示上は正しい割合
+                percent: percentageItem
+                    ? percentageItem.percent
+                    : 0,
+
+                color: CHARACTERS[key].color
+            };
+        });
+
+        setPieData(data);
+        setGameState("result");
+    }, 3000);
+};
                     setResultChar(CHARACTERS[winnerKey]);
                     
                     const percentages = calculatePercentages(finalScores);
